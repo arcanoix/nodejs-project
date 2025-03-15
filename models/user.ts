@@ -1,4 +1,4 @@
-import { hash } from "bcrypt";
+import { compare, hash } from "bcrypt";
 import { email, minLength, object, pipe, string, type InferInput } from "valibot";
 
 const emailSchema = pipe(string(), email());
@@ -47,4 +47,38 @@ export const createUser = async (email: string, password: string): Promise<User>
     users.set(email, newUser);
 
     return newUser;
+}
+
+
+/**
+ * Find a user by the given email.
+ * 
+ * @params {string} email - the email of the user
+ * @returns {User|undefined} the found user
+ */
+export const findUserByEmail = (email: string): User | undefined => {
+    return users.get(email);
+}
+
+/** validate a user password
+ * @params {User} user - The user whose password is to be validated
+ * @params {string} password - The password to validate
+ * @returns {Promise<boolean>} true if the password is valid, false otherwise
+ */
+export const validatePassword = async (user: User, password: string): Promise<boolean> => {
+    return compare(password, user.password);
+}
+
+/** Remove refreshToken
+ * @params {string} email - The refreshToken to remove
+ * @return {boolean} true if the refreshToken was removed, false otherwise
+ */
+export const removeUserToken = (email: string): boolean => {
+   const foundUser = users.get(email)
+
+   if(!foundUser) return false;
+
+   users.set(email, { ...foundUser, refreshToken: undefined });
+
+   return true;
 }
